@@ -78,6 +78,8 @@ Dự án này thực hiện việc tích hợp xác thực người dùng thông
    FACEBOOK_REDIRECT_URI=http://localhost:8000/auth/facebook/callback
    ```
 ---
+
 ## Video demo
 Link video :https://drive.google.com/file/d/1F26tXreTSkenlC0p-dUFo2MBMCuFTSmZ/view?usp=drive_link
 ---
+
