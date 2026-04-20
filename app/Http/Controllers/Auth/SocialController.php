@@ -22,44 +22,46 @@ class SocialController extends Controller
         }
     }
 
-    public function callback($provider)
+   public function callback($provider)
 {
     try {
-        Log::info("Starting callback for provider: " . $provider);
+        $allowed = ['facebook', 'google'];
+        if (!in_array($provider, $allowed)) {
+            abort(404);
+        }
 
-        $socialUser = Socialite::driver($provider)->user();
+        $socialUser = Socialite::driver($provider)
+            ->stateless()
+            ->user();
 
-        // 🔥 FIX 1: Facebook có thể không có email
-        $email = $socialUser->getEmail() ?? $socialUser->getId().'@'.$provider.'.com';
+        $email = $socialUser->getEmail() 
+            ?? $socialUser->getId().'@'.$provider.'.com';
 
-        Log::info("Email resolved: " . $email);
-
-        $user = User::where('email', $email)->first();
+        $user = User::where('provider', $provider)
+            ->where('provider_id', $socialUser->getId())
+            ->first();
 
         if (!$user) {
-            Log::info("Creating new user: " . $email);
-
             $user = User::create([
                 'name' => $socialUser->getName() ?? 'No Name',
                 'email' => $email,
                 'avatar' => $socialUser->getAvatar(),
                 'provider' => $provider,
                 'provider_id' => $socialUser->getId(),
-                'student_id' => '23810310152', // 👉 sửa MSSV của bạn
-                // 🔥 FIX 2: bắt buộc phải có password
-                'password' => bcrypt('123456')
+                'student_id' => '23810310152',
+                'password' => null
             ]);
         }
 
         Auth::login($user);
 
-        Log::info("User logged in: " . $user->email);
-
         return redirect('/dashboard');
 
     } catch (\Exception $e) {
-        Log::error("Social login error: " . $e->getMessage());
-        return redirect('/login')->with('error', 'Đăng nhập thất bại: ' . $e->getMessage());
+        Log::error("Social login error: ".$e->getMessage());
+
+        return redirect('/login')
+            ->with('error', 'Đăng nhập thất bại!');
     }
 }
     public function logout()
